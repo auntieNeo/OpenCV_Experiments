@@ -18,11 +18,21 @@ cv::Mat computeDescriptors(cv::Mat image, cv::vector<cv::KeyPoint> keypoints, cv
   return descriptors;
 }
 
+void listMatches(cv::vector<cv::DMatch> matches)
+{
+  for(size_t i = 0; i < matches.size(); ++i)
+  {
+    std::cout << "Match distance: " << matches[i].distance << std::endl;
+  }
+}
+
 int main(int argc, char **argv)
 {
   cv::Ptr<cv::FeatureDetector> detector = cv::FeatureDetector::create(argv[1]);
   cv::Ptr<cv::DescriptorExtractor> extractor = cv::DescriptorExtractor::create(argv[2]);
   cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create(argv[3]);
+
+  cv::Mat tmp_image;
 
   std::cout << "Reading the images...";
   std::cout.flush();
@@ -38,21 +48,23 @@ int main(int argc, char **argv)
   // compute the descriptors for the keypoints
   cv::Mat descriptors1;
   extractor->compute(image1, keypoints1, descriptors1);
+  cv::drawKeypoints(image1, keypoints1, tmp_image);
+  cv::imwrite("/tmp/keypoints1.jpg", tmp_image);
   cv::Mat descriptors2;
   extractor->compute(image2, keypoints2, descriptors2);
+  cv::drawKeypoints(image2, keypoints2, tmp_image);
+  cv::imwrite("/tmp/keypoints2.jpg", tmp_image);
 //  cv::Mat descriptors1 = computeDescriptors(image1, keypoints1, extractor);
 //  cv::Mat descriptors2 = computeDescriptors(image2, keypoints2, extractor);
 
   // matching descriptors
   cv::vector<cv::DMatch> matches;
   matcher->match(descriptors1, descriptors2, matches);
+  listMatches(matches);
 
   // drawing the results
-  cv::namedWindow("matches", 1);
-  cv::Mat img_matches;
-  cv::drawMatches(image1, keypoints1, image2, keypoints2, matches, img_matches);
-  cv::imshow("matches", img_matches);
-  std::cin.get();
+  cv::drawMatches(image1, keypoints1, image2, keypoints2, matches, tmp_image);
+  cv::imwrite("/tmp/matches.jpg", tmp_image);
 
   return 0;
 }
